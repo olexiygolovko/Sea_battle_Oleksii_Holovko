@@ -1,7 +1,10 @@
 from random import randint
+
 from colorama import Fore
 from colorama import init
+
 init(autoreset=True)
+
 import time
 
 
@@ -235,7 +238,7 @@ class Game:
         first_sp = first.split("\n")
         second_sp = second.split("\n")
         max_width = max(map(len, first_sp))
-        max_len = max(len(first_sp),len(second_sp))
+        max_len = max(len(first_sp), len(second_sp))
         first_sp += [""] * (max_len - len(first_sp))
         second_sp += [""] * (max_len - len(second_sp))
         text = []
@@ -278,6 +281,7 @@ class Game:
     def start(self):
         self.greet()
         self.loop()
+
 
 g = Game()
 g.start()
