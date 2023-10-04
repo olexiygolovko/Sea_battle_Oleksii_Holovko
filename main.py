@@ -26,12 +26,12 @@ class BoardException(Exception):
 
 class BoardOutException(BoardException):
     def __str__(self):
-        return "Вы пытаетесь выстрелить за доску!"
+        return "You're trying to shoot over the board!"
 
 
 class BoardUsedException(BoardException):
     def __str__(self):
-        return "Вы уже стреляли в эту клетку"
+        return "You've already shot at this cage"
 
 
 class BoardWrongShipException(BoardException):
@@ -73,18 +73,17 @@ class Board:
 
         self.count = 0
 
-        self.field = [["O"] * size for _ in range(size)]
+        self.field = [["~"] * size for _ in range(size)]
 
         self.busy = []
         self.ships = []
 
     def add_ship(self, ship):
-
         for d in ship.dots:
             if self.out(d) or d in self.busy:
                 raise BoardWrongShipException()
         for d in ship.dots:
-            self.field[d.x][d.y] = "▲"
+            self.field[d.x][d.y] = "□"
             self.busy.append(d)
 
         self.ships.append(ship)
@@ -111,7 +110,7 @@ class Board:
             res += f"\n{i + 1} | " + " | ".join(row) + " |"
 
         if self.hid:
-            res = res.replace("▲", "0")
+            res = res.replace("□","~")
         return res
 
     def out(self, d):
@@ -133,14 +132,14 @@ class Board:
                 if ship.lives == 0:
                     self.count += 1
                     self.contour(ship, verb=True)
-                    print("Корабль уничтожен!")
+                    print(f"\033[32m The ship is sunk!")
                     return False
                 else:
-                    print("Корабль ранен!")
+                    print(f"\033[32m Hit!")
                     return True
 
         self.field[d.x][d.y] = "."
-        print("Мимо!")
+        print(f"\033[31m Past!")
         return False
 
     def begin(self):
@@ -168,23 +167,23 @@ class Player:
 class AI(Player):
     def ask(self):
         d = Dot(randint(0, 5), randint(0, 5))
-        print(f"Ход компьютера: {d.x + 1} {d.y + 1}")
+        print(f"\033[33m Computer progress: {d.x + 1} {d.y + 1}")
         return d
 
 
 class User(Player):
     def ask(self):
         while True:
-            cords = input("Ваш ход:").split()
+            cords = input("\033[35m Your move:").split()
 
             if len(cords) != 2:
-                print(" Введите 2 координаты! ")
+                print(f"\033[31m Enter 2 coordinates! ")
                 continue
 
             x, y = cords
 
             if not (x.isdigit()) or not (y.isdigit()):
-                print(" Введите числа! ")
+                print(f"\033[31m Enter numbers! ")
                 continue
 
             x, y = int(x), int(y)
@@ -194,6 +193,7 @@ class User(Player):
 
 class Game:
     def __init__(self, size=6):
+        self.lens = [3, 2, 2, 1, 1, 1, 1]
         self.size = size
         pl = self.random_board()
         co = self.random_board()
@@ -209,10 +209,9 @@ class Game:
         return board
 
     def random_place(self):
-        lens = [3, 2, 2, 1, 1, 1, 1]
         board = Board(size=self.size)
         attempts = 0
-        for l in lens:
+        for l in self.lens:
             while True:
                 attempts += 1
                 if attempts > 2000:
@@ -226,11 +225,12 @@ class Game:
         board.begin()
         return board
 
-    def greet(self):
+    @staticmethod
+    def greet():
         print(Fore.BLUE + "-" * 60)
-        print(f"{Fore.YELLOW} Приветсвуем вас в игре морской бой!")
-        print(f"{Fore.YELLOW} Формат ввода: x y ")
-        print(f"{Fore.YELLOW} |  x - номер строки  |  y - номер столбца  | ")
+        print(f"{Fore.YELLOW} Welcome to the sea battle game!")
+        print(f"{Fore.YELLOW} Input format: x y ")
+        print(f"{Fore.YELLOW} x - row number y - column number")
         print()
 
     @staticmethod
@@ -247,21 +247,21 @@ class Game:
         return "\n".join(text)
 
     def loop(self):
-        username = input("Ваше имя: ")
+        username = input(f"\033[35m Your name: ")
         num = 0
         while True:
             print(Fore.BLUE + "-" * 60)
-            user_board = "Доска пользователя:\n\n" + str(self.us.board)
-            ai_board = "Доска компьютера:\n\n" + str(self.ai.board)
+            user_board = "User board:\n\n" + str(self.us.board)
+            ai_board = "Computer board:\n\n" + str(self.ai.board)
             print(self.fields_parallel(user_board, ai_board))
 
             if num % 2 == 0:
                 print(Fore.BLUE + "-" * 60)
-                print(f"Ходит {username}!")
+                print(f"\033[35m Move: {username}!")
                 repeat = self.us.move()
             else:
                 print(Fore.BLUE + "-" * 60)
-                print("Ходит компьютер...")
+                print("\033[33m The computer is moving...")
                 time.sleep(2)
                 repeat = self.ai.move()
             if repeat:
@@ -269,12 +269,12 @@ class Game:
 
             if self.ai.board.count == 7:
                 print(Fore.BLUE + "-" * 60)
-                print(f"{username} выиграл!")
+                print(f"\033[32m {username} won!")
                 break
 
             if self.us.board.count == 7:
                 print(Fore.BLUE + "-" * 60)
-                print("Компьютер выиграл!")
+                print(f"\033[31m Computer won!")
                 break
             num += 1
 
